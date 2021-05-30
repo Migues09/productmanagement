@@ -67,7 +67,7 @@ class UserRestController {
     }
 
     //Save an user
-    @PostMapping("/signUp")
+    @PostMapping("/signup")
     fun saveUser(@RequestBody user : User): ResponseEntity<Any> {
         return try {
             userBusiness!!.saveUser(user)
@@ -121,5 +121,14 @@ class UserRestController {
         response.addCookie(cookie)
 
         return ResponseEntity.ok("OK")
+    }
+
+    @PostMapping("/logout")
+    fun logout(response: HttpServletResponse) : ResponseEntity<Any>{
+        var cookie = Cookie("jwt", "")
+        cookie.maxAge = 0
+
+        response.addCookie(cookie)
+        return ResponseEntity.ok("success")
     }
 }
