@@ -66,4 +66,8 @@ class UserBusiness : IUserBusiness {
             }
         }
     }
+
+    override fun findByEmail(email: String) : User? {
+        return this.userRepository!!.findByEmail(email)
+    }
 }

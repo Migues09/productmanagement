@@ -1,13 +1,39 @@
 package com.svl.productmanagement.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import net.bytebuddy.build.ToStringPlugin
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.validation.annotation.Validated
+import java.security.Principal
 import javax.persistence.*
 
 @Entity
 @Table(name = "user")
-data class User(val userName : String, val pass : String, val email : String,
-                val validated: Boolean, val name : String = "", val lastName : String = ""){
+class User() {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id : Long = 0
+
+    @Column
+    var userName = ""
+
+    @Column
+    var firstName = ""
+
+    @Column
+    var lastName = ""
+
+    @Column(unique = true)
+    var email = ""
+
+    @Column
+    var pass = ""
+        get() = field
+        set(value) {
+            val passwordEncoder = BCryptPasswordEncoder()
+            field = passwordEncoder.encode(value)
+        }
+
 }
