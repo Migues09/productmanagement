@@ -30,6 +30,7 @@ class User() {
 
     @Column
     var pass = ""
+        @JsonIgnore
         get() = field
         set(value) {
             val passwordEncoder = BCryptPasswordEncoder()

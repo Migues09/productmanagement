@@ -29,8 +29,13 @@ class UserRestController {
 
     //Return list of all users
     @GetMapping("/users")
-    fun listAllUsers() : ResponseEntity<List<User>>{
+    fun listAllUsers(@CookieValue("jwt") jwt : String?) : ResponseEntity<Any>{
         return try {
+            if(jwt == null){
+                return ResponseEntity.status(401).body("unauthenticated")
+            }
+
+            val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
             ResponseEntity(userBusiness!!.listAllUsers(), HttpStatus.OK)
         } catch (e: Exception){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -38,15 +43,27 @@ class UserRestController {
     }
 
     //Return a user by id
-    @GetMapping("/{id}")
-    fun listUser(@PathVariable("id") id: Long) : ResponseEntity<User>{
-        return try {
-            ResponseEntity(userBusiness!!.listUser(id), HttpStatus.OK)
-        } catch (e: BusinessException){
-            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
-        } catch (e: NotFoundException){
-            ResponseEntity(HttpStatus.NOT_FOUND)
+    @GetMapping("/user")
+    fun listUser(@CookieValue("jwt") jwt : String?) : ResponseEntity<Any>{
+        try {
+            if(jwt == null){
+                return ResponseEntity.status(401).body("unauthenticated")
+            }
+
+            val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
+
+            return ResponseEntity(userBusiness!!.listUser(body.issuer.toLong()), HttpStatus.OK)
+            //return ResponseEntity(body.issuer, HttpStatus.OK)
+        } catch (e: Exception){
+            return ResponseEntity.status(401).body("unauthenticated")
         }
+//        return try {
+//            ResponseEntity(userBusiness!!.listUser(id), HttpStatus.OK)
+//        } catch (e: BusinessException){
+//            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+//        } catch (e: NotFoundException){
+//            ResponseEntity(HttpStatus.NOT_FOUND)
+//        }
     }
 
     //Save an user

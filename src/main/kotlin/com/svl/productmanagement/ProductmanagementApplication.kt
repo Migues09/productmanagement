@@ -22,14 +22,6 @@ class ProductmanagementApplication : CommandLineRunner {
 		user.email = "m@g.com"
 		user.pass = "pass"
 		userRepository!!.save(user)
-//		val user = User("migues06", "migues06@gmail.com",
-//						false, "", "")
-//		userRepository!!.save(user)
-//		val user1 = User("migues09", "migues09@gmail.com",
-//			true, "", "")
-//		userRepository!!.save(user1)
-
-
 	}
 
 }
