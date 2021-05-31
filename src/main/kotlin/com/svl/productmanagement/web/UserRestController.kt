@@ -15,13 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import java.util.*
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletResponse
 
 // Return the mapped data
-@RestController
+@Controller
 @RequestMapping(Constants.URL_BASE)
 class UserRestController {
 
@@ -94,8 +95,8 @@ class UserRestController {
     }
 
     //Update user
-    @PutMapping("")
-    fun updateUser(@CookieValue("jwt") jwt : String?, @RequestBody user : User): ResponseEntity<Any> {
+    @PutMapping("/user/{id}")
+    fun updateUser(@CookieValue("jwt") jwt : String?, @RequestBody user : User, @PathVariable("id") id : Long): ResponseEntity<Any> {
         return try {
             if(jwt == null){
                 return ResponseEntity.status(401).body("unauthenticated")
