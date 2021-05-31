@@ -4,7 +4,7 @@ import com.sendgrid.*
 import com.sendgrid.helpers.mail.Mail
 import com.sendgrid.helpers.mail.objects.Content
 import com.svl.productmanagement.business.IUserBusiness
-import com.svl.productmanagement.dtos.LoginDTO
+import com.svl.productmanagement.dtos.UserDTO
 import com.svl.productmanagement.exception.BusinessException
 import com.svl.productmanagement.exception.NotFoundException
 import com.svl.productmanagement.model.User
@@ -12,16 +12,13 @@ import com.svl.productmanagement.utils.Constants
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.bind.annotation.*
 import java.util.*
 import javax.servlet.http.Cookie
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletResponse
-import javax.validation.constraints.Email
 
 // Return the mapped data
 @RestController
@@ -98,8 +95,11 @@ class UserRestController {
 
     //Update user
     @PutMapping("")
-    fun updateUser(@RequestBody user : User): ResponseEntity<Any> {
+    fun updateUser(@CookieValue("jwt") jwt : String?, @RequestBody user : User): ResponseEntity<Any> {
         return try {
+            if(jwt == null){
+                return ResponseEntity.status(401).body("unauthenticated")
+            }
             userBusiness!!.saveUser(user)
 
             ResponseEntity(HttpStatus.OK)
@@ -110,13 +110,19 @@ class UserRestController {
 
     //Restore pass
     @PutMapping("/restore_pass")
-    fun updatePassword(@RequestBody string : String): ResponseEntity<Any> {
+    fun updatePassword(@CookieValue("jwt") jwt : String?, @RequestBody userDTO : UserDTO): ResponseEntity<Any> {
         return try {
+            if(jwt == null){
+                return ResponseEntity.status(401).body("unauthenticated")
+            }
+            var user = userBusiness!!.findByEmail(userDTO.email)
+            if(user == null){
+                return ResponseEntity.status(404).body("User Not Found")
+            }
+            user!!.pass = userDTO.pass
+            userBusiness!!.saveUser(user)
 
-
-            //userBusiness!!.saveUser(user)
-
-            ResponseEntity(HttpStatus.OK)
+            return ResponseEntity.ok("Password changed!!")
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: NotFoundException){
@@ -137,8 +143,9 @@ class UserRestController {
         }
     }
 
+    //User login
     @PostMapping("/login")
-    fun login(@RequestBody body : LoginDTO, response: HttpServletResponse) : ResponseEntity<Any> {
+    fun login(@RequestBody body : UserDTO, response: HttpServletResponse) : ResponseEntity<Any> {
         val user = userBusiness!!.findByEmail(body.email) ?:
             return ResponseEntity.badRequest().body("USER NOT FOUND")
 
