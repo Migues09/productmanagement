@@ -47,8 +47,8 @@ class UserRestController {
     }
 
     //Return a user by id
-    @GetMapping("/user")
-    fun listUser(@CookieValue("jwt") jwt : String?) : ResponseEntity<Any>{
+    @GetMapping("/user/{id}")
+    fun listUser(@CookieValue("jwt") jwt : String?, @PathVariable("id") id : Long) : ResponseEntity<Any>{
         try {
             if(jwt == null){
                 return ResponseEntity.status(401).body("unauthenticated")
@@ -56,18 +56,13 @@ class UserRestController {
 
             val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
 
-            return ResponseEntity(userBusiness!!.listUser(body.issuer.toLong()), HttpStatus.OK)
+            return ResponseEntity(userBusiness!!.listUser(id), HttpStatus.OK)
             //return ResponseEntity(body.issuer, HttpStatus.OK)
-        } catch (e: Exception){
-            return ResponseEntity.status(401).body("unauthenticated")
+        }catch (e: BusinessException){
+            return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        } catch (e: NotFoundException){
+            return ResponseEntity(HttpStatus.NOT_FOUND)
         }
-//        return try {
-//            ResponseEntity(userBusiness!!.listUser(id), HttpStatus.OK)
-//        } catch (e: BusinessException){
-//            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
-//        } catch (e: NotFoundException){
-//            ResponseEntity(HttpStatus.NOT_FOUND)
-//        }
     }
 
     //Save an user
@@ -76,16 +71,28 @@ class UserRestController {
         return try {
             userBusiness!!.saveUser(user)
             val issuer = user.id.toString()
-            val emailToken = Jwts.builder()
-                .setIssuer(issuer)
-                .setExpiration(Date(System.currentTimeMillis() + 60 * 1 * 1000)) // 1 hour
-                .signWith(SignatureAlgorithm.HS512, "emailSecret").compact()
+			val emailToken = Jwts.builder()
+				.setIssuer(issuer)
+				.setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 hour
+				.signWith(SignatureAlgorithm.HS512, "emailSecret").compact()
 
+			val validateUrl = "http://localhost:8080/api/v1/validate/${emailToken}"
+			val sendGrid = SendGrid("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")
+			val from = com.sendgrid.helpers.mail.objects.Email("migues09@gmail.com")
+			val subject = "Validate your Email"
+			val to = com.sendgrid.helpers.mail.objects.Email(user.email)
+			val content = Content("text/plain", "Click on the link below to validate your email /n $validateUrl")
+			val mail = Mail(from, subject, to, content)
 
+			val request = Request()
+			request.method = Method.POST
+			request.endpoint = "mail/send"
+			request.body = mail.build()
+			val response = sendGrid.api(request)
 
-            ResponseEntity.ok(HttpStatus.CREATED)
+            ResponseEntity.ok("User created. Please verify your e-mail to validate your account ")
         } catch (e: BusinessException){
-            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+            ResponseEntity.status(500).body("Server Error")
         }
     }
 
@@ -98,6 +105,22 @@ class UserRestController {
             ResponseEntity(HttpStatus.OK)
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    //Restore pass
+    @PutMapping("/restore_pass")
+    fun updatePassword(@RequestBody string : String): ResponseEntity<Any> {
+        return try {
+
+
+            //userBusiness!!.saveUser(user)
+
+            ResponseEntity(HttpStatus.OK)
+        } catch (e: BusinessException){
+            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        } catch (e: NotFoundException){
+            ResponseEntity(HttpStatus.NOT_FOUND)
         }
     }
 
@@ -120,7 +143,7 @@ class UserRestController {
             return ResponseEntity.badRequest().body("USER NOT FOUND")
 
         if(!BCryptPasswordEncoder().matches(body.pass, user.pass)){
-            return ResponseEntity.badRequest().body("INVALID PASSWORD")
+            return ResponseEntity.badRequest().body("INVALID PASSWORD" + body.pass)
         }
 
         if (!user.validated){

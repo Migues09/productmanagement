@@ -30,12 +30,12 @@ class User() {
 
     @Column
     var pass = ""
-        @JsonIgnore
+        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
         get() = field
         set(value) {
-            val passwordEncoder = BCryptPasswordEncoder()
-            field = passwordEncoder.encode(value)
+            field = BCryptPasswordEncoder().encode(value)
         }
     @Column
+    @JsonIgnore
     var validated = false
 }
