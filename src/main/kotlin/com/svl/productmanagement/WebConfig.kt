@@ -11,7 +11,7 @@ class WebConfig : WebMvcConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/**")
-            .allowedOrigins("http://localhost:8000")
+            .allowedOrigins("http://localhost:8080")
             .allowCredentials(true) // frontend to get the cookie
     }
 }

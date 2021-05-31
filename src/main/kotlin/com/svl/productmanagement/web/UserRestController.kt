@@ -1,5 +1,8 @@
 package com.svl.productmanagement.web
 
+import com.sendgrid.*
+import com.sendgrid.helpers.mail.Mail
+import com.sendgrid.helpers.mail.objects.Content
 import com.svl.productmanagement.business.IUserBusiness
 import com.svl.productmanagement.dtos.LoginDTO
 import com.svl.productmanagement.exception.BusinessException
@@ -18,6 +21,7 @@ import java.util.*
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletResponse
+import javax.validation.constraints.Email
 
 // Return the mapped data
 @RestController
@@ -71,6 +75,14 @@ class UserRestController {
     fun saveUser(@RequestBody user : User): ResponseEntity<Any> {
         return try {
             userBusiness!!.saveUser(user)
+            val issuer = user.id.toString()
+            val emailToken = Jwts.builder()
+                .setIssuer(issuer)
+                .setExpiration(Date(System.currentTimeMillis() + 60 * 1 * 1000)) // 1 hour
+                .signWith(SignatureAlgorithm.HS512, "emailSecret").compact()
+
+
+
             ResponseEntity.ok(HttpStatus.CREATED)
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -82,6 +94,7 @@ class UserRestController {
     fun updateUser(@RequestBody user : User): ResponseEntity<Any> {
         return try {
             userBusiness!!.saveUser(user)
+
             ResponseEntity(HttpStatus.OK)
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -110,6 +123,10 @@ class UserRestController {
             return ResponseEntity.badRequest().body("INVALID PASSWORD")
         }
 
+        if (!user.validated){
+            return ResponseEntity.badRequest().body("YOU MUST VALIDATE YOUR EMAIL")
+        }
+
         val issuer = user.id.toString()
         val jwt = Jwts.builder()
             .setIssuer(issuer)
@@ -130,5 +147,23 @@ class UserRestController {
 
         response.addCookie(cookie)
         return ResponseEntity.ok("success")
+    }
+
+    @GetMapping("/validate/{token}")
+    fun validateEmail(@PathVariable("token") token : String) : ResponseEntity<Any>{
+        try{
+            val body = Jwts.parser().setSigningKey("emailSecret").parseClaimsJws(token).body
+            val user = userBusiness!!.listUser(body.issuer.toLong())
+            if(!user.validated){
+                user.validated = true
+                userBusiness!!.saveUser(user)
+            } else {
+                return ResponseEntity.badRequest().body("This e-mail it's already validated")
+            }
+            return ResponseEntity("e-mail validated", HttpStatus.OK)
+        } catch (e: Exception){
+            return ResponseEntity.status(401).body(e.message)
+        }
+
     }
 }

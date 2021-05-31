@@ -36,5 +36,6 @@ class User() {
             val passwordEncoder = BCryptPasswordEncoder()
             field = passwordEncoder.encode(value)
         }
-
+    @Column
+    var validated = false
 }
