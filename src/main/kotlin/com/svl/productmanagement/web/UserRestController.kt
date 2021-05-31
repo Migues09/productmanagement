@@ -75,7 +75,7 @@ class UserRestController {
 				.signWith(SignatureAlgorithm.HS512, "emailSecret").compact()
 
 			val validateUrl = "http://localhost:8080/api/v1/validate/${emailToken}"
-			val sendGrid = SendGrid("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")
+			val sendGrid = SendGrid("#API_KEY#")
 			val from = com.sendgrid.helpers.mail.objects.Email("migues09@gmail.com")
 			val subject = "Validate your Email"
 			val to = com.sendgrid.helpers.mail.objects.Email(user.email)
