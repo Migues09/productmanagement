@@ -73,8 +73,7 @@ class ProductRestController {
             if(jwt == null){
                 return ResponseEntity.status(401).body("unauthenticated")
             }
-            var products = productBusiness!!.findByProductType(productDTO.type)
-            return ResponseEntity(products, HttpStatus.OK)
+            return ResponseEntity(productBusiness!!.findByProductType(productDTO.type), HttpStatus.OK)
         }catch (e: BusinessException){
             return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: NotFoundException){

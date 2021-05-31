@@ -53,10 +53,7 @@ class ProductBusiness : IProductBusiness {
         }
     }
 
-    override fun findByProductType(type: String) : List<Product>? {
-        var product = Product()
-        product.productType = type
-        var example = Example.of(product)
-        return this.productRepository!!.findAll(example)
+    override fun findByProductType(type : String): List<Product> {
+        return productRepository!!.findByProductType(type)
     }
 }

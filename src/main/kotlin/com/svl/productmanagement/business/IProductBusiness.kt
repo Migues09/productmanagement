@@ -8,5 +8,5 @@ interface IProductBusiness {
     fun listAllProducts() : List<Product>
     fun listProduct(id : Long) : Product
     fun saveProduct(product: Product) : Product
-    fun findByProductType(type : String) : List<Product>?
+    fun findByProductType(type : String) : List<Product>
 }
