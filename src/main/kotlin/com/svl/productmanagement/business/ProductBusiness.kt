@@ -7,6 +7,9 @@ import com.svl.productmanagement.exception.NotFoundException
 import com.svl.productmanagement.model.Product
 import com.svl.productmanagement.model.User
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Example
+import org.springframework.data.domain.ExampleMatcher
+import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.exact
 import org.springframework.stereotype.Service
 import java.util.*
 import kotlin.jvm.Throws
@@ -51,6 +54,9 @@ class ProductBusiness : IProductBusiness {
     }
 
     override fun findByProductType(type: String) : List<Product>? {
-        return this.productRepository!!.findByProductType(type)
+        var product = Product()
+        product.productType = type
+        var example = Example.of(product)
+        return this.productRepository!!.findAll(example)
     }
 }

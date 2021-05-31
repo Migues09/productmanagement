@@ -5,8 +5,10 @@ import com.sendgrid.Request
 import com.sendgrid.SendGrid
 import com.sendgrid.helpers.mail.Mail
 import com.sendgrid.helpers.mail.objects.Content
+import com.svl.productmanagement.dao.ProductRepository
 import com.svl.productmanagement.dao.UserRepository
 import com.svl.productmanagement.exception.BusinessException
+import com.svl.productmanagement.model.Product
 import com.svl.productmanagement.model.User
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
@@ -24,6 +26,8 @@ class ProductmanagementApplication : CommandLineRunner {
 
 	@Autowired
 	val userRepository : UserRepository? = null
+	@Autowired
+	val productRepository : ProductRepository? = null
 
 	override fun run(vararg args: String?) {
 		var user = User()
@@ -33,8 +37,17 @@ class ProductmanagementApplication : CommandLineRunner {
 		user.email = "migues09@gmail.com"
 		user.pass = "pass"
 		user.validated = true
+
+		var product = Product()
+		product.productName = "Samsung A40"
+		product.productDesc = "Mobile Phone"
+		product.productType = "phone"
+		product.productImg = ""
+		product.companyName = "Samsung"
+
 		try {
 			userRepository!!.save(user)
+			productRepository!!.save(product)
 
 		} catch (e: Exception){
 			throw BusinessException(e.message)
