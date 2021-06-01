@@ -27,7 +27,6 @@ class CompanyRestController {
                 return ResponseEntity.status(401).body("unauthenticated")
             }
 
-            val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
             ResponseEntity(companyBusiness!!.listAllCompanies(), HttpStatus.OK)
         } catch (e: Exception){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
