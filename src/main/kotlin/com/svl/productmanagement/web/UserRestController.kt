@@ -73,7 +73,7 @@ class UserRestController {
 				.setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 hour
 				.signWith(SignatureAlgorithm.HS512, "emailSecret").compact()
 
-			val validateUrl = "http://localhost:8080/api/v1/users/validate/${emailToken}"
+			val validateUrl = "http://localhost:8080/api/v1/user/validate/${emailToken}"
 			val sendGrid = SendGrid("#API_KEY#")
 			val from = com.sendgrid.helpers.mail.objects.Email("migues09@gmail.com")
 			val subject = "Validate your Email"
@@ -114,7 +114,7 @@ class UserRestController {
 
             userBusiness!!.saveUser(auxUser)
 
-            ResponseEntity.ok("Product updated!!")
+            ResponseEntity.ok("User updated!!")
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }catch (e:NotFoundException){
@@ -176,7 +176,7 @@ class UserRestController {
        }
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     fun logout(response: HttpServletResponse) : ResponseEntity<Any>{
         var cookie = Cookie("jwt", "")
         cookie.maxAge = 0

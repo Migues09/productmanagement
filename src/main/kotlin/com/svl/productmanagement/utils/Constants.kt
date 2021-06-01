@@ -11,6 +11,6 @@ class Constants {
         // Product Base API endpoint
         const val URL_PRODUCT = "$URL_BASE/product"
         // User Base API endpoint
-        const val URL_USERS= "$URL_BASE/users"
+        const val URL_USERS= "$URL_BASE/user"
     }
 }
