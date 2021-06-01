@@ -28,7 +28,6 @@ class ProductRestController {
                 return ResponseEntity.status(401).body("unauthenticated")
             }
 
-            val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
             ResponseEntity(productBusiness!!.listAllProducts(), HttpStatus.OK)
         } catch (e: Exception){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
