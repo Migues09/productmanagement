@@ -13,7 +13,7 @@ import javax.persistence.*
 class Product() {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id : Long = 0
 
     @Column(unique = true)

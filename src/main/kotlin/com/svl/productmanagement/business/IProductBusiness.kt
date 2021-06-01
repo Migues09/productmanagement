@@ -1,7 +1,6 @@
 package com.svl.productmanagement.business
 
 import com.svl.productmanagement.model.Product
-import com.svl.productmanagement.model.User
 
 interface IProductBusiness {
 

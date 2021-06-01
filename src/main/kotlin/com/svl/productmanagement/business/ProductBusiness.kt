@@ -1,15 +1,10 @@
 package com.svl.productmanagement.business
 
 import com.svl.productmanagement.dao.ProductRepository
-import com.svl.productmanagement.dao.UserRepository
 import com.svl.productmanagement.exception.BusinessException
 import com.svl.productmanagement.exception.NotFoundException
 import com.svl.productmanagement.model.Product
-import com.svl.productmanagement.model.User
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.domain.Example
-import org.springframework.data.domain.ExampleMatcher
-import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.exact
 import org.springframework.stereotype.Service
 import java.util.*
 import kotlin.jvm.Throws
