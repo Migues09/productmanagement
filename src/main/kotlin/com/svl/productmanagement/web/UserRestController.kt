@@ -152,7 +152,7 @@ class UserRestController {
                userBusiness!!.findByEmail(body.email) ?: return ResponseEntity.badRequest().body("USER NOT FOUND")
 
            if (!BCryptPasswordEncoder().matches(body.pass, user.pass)) {
-               return ResponseEntity.badRequest().body("INVALID PASSWORD" + body.pass)
+               return ResponseEntity.badRequest().body("INVALID PASSWORD")
            }
 
            if (!user.validated) {
