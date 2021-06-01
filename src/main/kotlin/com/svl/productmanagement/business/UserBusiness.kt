@@ -48,25 +48,6 @@ class UserBusiness : IUserBusiness {
         }
     }
 
-    @Throws(BusinessException::class, NotFoundException::class)
-    override fun deleteUser(id: Long) {
-        val op : Optional<User>
-        try{
-            op = userRepository!!.findById(id)
-        } catch (e: Exception){
-            throw BusinessException(e.message)
-        }
-        if(!op.isPresent){
-            throw NotFoundException("The user with id $id is not found")
-        } else {
-            try{
-                userRepository!!.deleteById(id)
-            } catch (e: Exception){
-                throw BusinessException(e.message)
-            }
-        }
-    }
-
     override fun findByEmail(email: String) : User? {
         return this.userRepository!!.findByEmail(email)
     }

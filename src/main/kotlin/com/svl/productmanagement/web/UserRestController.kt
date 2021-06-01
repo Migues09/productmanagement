@@ -23,14 +23,14 @@ import javax.servlet.http.HttpServletResponse
 
 // Return the mapped data
 @Controller
-@RequestMapping(Constants.URL_BASE)
+@RequestMapping(Constants.URL_USERS)
 class UserRestController {
 
     @Autowired
     val userBusiness : IUserBusiness? = null
 
     //Return list of all users
-    @GetMapping("/users")
+    @GetMapping("/all")
     fun listAllUsers(@CookieValue("jwt") jwt : String?) : ResponseEntity<Any>{
         return try {
             if(jwt == null){
@@ -45,7 +45,7 @@ class UserRestController {
     }
 
     //Return a user by id
-    @GetMapping("/user/{id}")
+    @GetMapping("/{id}")
     fun listUser(@CookieValue("jwt") jwt : String?, @PathVariable("id") id : Long) : ResponseEntity<Any>{
         try {
             if(jwt == null){
@@ -55,11 +55,10 @@ class UserRestController {
             val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
 
             return ResponseEntity(userBusiness!!.listUser(id), HttpStatus.OK)
-            //return ResponseEntity(body.issuer, HttpStatus.OK)
         }catch (e: BusinessException){
             return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: NotFoundException){
-            return ResponseEntity(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not Found")
         }
     }
 
@@ -74,7 +73,7 @@ class UserRestController {
 				.setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 hour
 				.signWith(SignatureAlgorithm.HS512, "emailSecret").compact()
 
-			val validateUrl = "http://localhost:8080/api/v1/validate/${emailToken}"
+			val validateUrl = "http://localhost:8080/api/v1/users/validate/${emailToken}"
 			val sendGrid = SendGrid("#API_KEY#")
 			val from = com.sendgrid.helpers.mail.objects.Email("migues09@gmail.com")
 			val subject = "Validate your Email"
@@ -95,17 +94,31 @@ class UserRestController {
     }
 
     //Update user
-    @PutMapping("/user/{id}")
+    @PutMapping("/{id}")
     fun updateUser(@CookieValue("jwt") jwt : String?, @RequestBody user : User, @PathVariable("id") id : Long): ResponseEntity<Any> {
         return try {
             if(jwt == null){
                 return ResponseEntity.status(401).body("unauthenticated")
             }
-            userBusiness!!.saveUser(user)
+            val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
+            if(body.issuer.toLong() != id){
+                return ResponseEntity.status(401).body("You can modify only your data")
+            }
 
-            ResponseEntity(HttpStatus.OK)
+            var auxUser = userBusiness!!.listUser(id)
+
+            auxUser.firstName = user.firstName
+            auxUser.lastName = user.lastName
+            auxUser.email = user.email
+            auxUser.userName = user.userName
+
+            userBusiness!!.saveUser(auxUser)
+
+            ResponseEntity.ok("Product updated!!")
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        }catch (e:NotFoundException){
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Failed to update. User not Found")
         }
     }
 
@@ -127,48 +140,40 @@ class UserRestController {
         } catch (e: BusinessException){
             ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } catch (e: NotFoundException){
-            ResponseEntity(HttpStatus.NOT_FOUND)
-        }
-    }
-
-    //Delete user
-    @DeleteMapping("/{id}")
-    fun deleteUser(@PathVariable("id") id : Long) : ResponseEntity<Any>{
-        return try {
-            userBusiness!!.deleteUser(id)
-            ResponseEntity(HttpStatus.OK)
-        } catch (e: BusinessException){
-            ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
-        } catch (e: NotFoundException){
-            ResponseEntity(HttpStatus.NOT_FOUND)
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body("User Not Found")
         }
     }
 
     //User login
     @PostMapping("/login")
     fun login(@RequestBody body : UserDTO, response: HttpServletResponse) : ResponseEntity<Any> {
-        val user = userBusiness!!.findByEmail(body.email) ?:
-            return ResponseEntity.badRequest().body("USER NOT FOUND")
+       try {
+           val user =
+               userBusiness!!.findByEmail(body.email) ?: return ResponseEntity.badRequest().body("USER NOT FOUND")
 
-        if(!BCryptPasswordEncoder().matches(body.pass, user.pass)){
-            return ResponseEntity.badRequest().body("INVALID PASSWORD" + body.pass)
-        }
+           if (!BCryptPasswordEncoder().matches(body.pass, user.pass)) {
+               return ResponseEntity.badRequest().body("INVALID PASSWORD" + body.pass)
+           }
 
-        if (!user.validated){
-            return ResponseEntity.badRequest().body("YOU MUST VALIDATE YOUR EMAIL")
-        }
+           if (!user.validated) {
+               return ResponseEntity.badRequest().body("YOU MUST VALIDATE YOUR EMAIL")
+           }
 
-        val issuer = user.id.toString()
-        val jwt = Jwts.builder()
-            .setIssuer(issuer)
-            .setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 day\
-            .signWith(SignatureAlgorithm.HS512, "secret").compact() // the secret must be stored in a secure place, for test purposes is located here
+           val issuer = user.id.toString()
+           val jwt = Jwts.builder()
+               .setIssuer(issuer)
+               .setExpiration(Date(System.currentTimeMillis() + 60 * 24 * 1000)) // 1 day\
+               .signWith(SignatureAlgorithm.HS512, "secret")
+               .compact() // the secret must be stored in a secure place, for test purposes is located here
 
-        val cookie = Cookie("jwt", jwt)
-        cookie.isHttpOnly = true
-        response.addCookie(cookie)
+           val cookie = Cookie("jwt", jwt)
+           cookie.isHttpOnly = true
+           response.addCookie(cookie)
 
-        return ResponseEntity.ok("OK")
+           return ResponseEntity.ok("Logged in!!")
+       } catch (e: Exception) {
+           return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+       }
     }
 
     @PostMapping("/logout")
@@ -177,7 +182,7 @@ class UserRestController {
         cookie.maxAge = 0
 
         response.addCookie(cookie)
-        return ResponseEntity.ok("success")
+        return ResponseEntity.ok("Logout success!!")
     }
 
     @GetMapping("/validate/{token}")
