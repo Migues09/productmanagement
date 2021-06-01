@@ -1,19 +1,13 @@
 package com.svl.productmanagement.model
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
-import net.bytebuddy.build.ToStringPlugin
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.validation.annotation.Validated
-import java.security.Principal
 import javax.persistence.*
 
 @Entity
-@Table(name = "product")
+@Table(name = "company")
 class Company() {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id : Long = 0
 
     @Column(unique = true)
